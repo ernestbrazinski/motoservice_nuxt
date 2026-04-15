@@ -1,0 +1,83 @@
+{
+  "app": {
+    "name": "Motoservice",
+    "footer": "MVP: service requests; code-based tracking is only for foreign-auction purchases (in production the code is sent in Telegram)."
+  },
+  "nav": {
+    "home": "Home",
+    "cabinet": "Auction tracking"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "toggle": "Toggle theme"
+  },
+  "locale": {
+    "label": "Language"
+  },
+  "home": {
+    "title": "Motorcycle workshop & logistics",
+    "lead": "Repairs, parts, Georgia sourcing, towing, US/Japan auctions — per BRD.",
+    "servicesTitle": "Services",
+    "requestTitle": "Request a service",
+    "requestHint": "We will contact you about the service you chose. The tracking code for an auction import is issued separately — see the section below.",
+    "serviceLabel": "Service",
+    "notesLabel": "Notes (optional)",
+    "notesPlaceholder": "Bike model, problem, contact preference…",
+    "submit": "Submit request",
+    "thanksTitle": "Request sent",
+    "thanksGeneric": "Thank you. We will follow up with you.",
+    "thanksAuction": "Thank you. After you pay for the auction-sourcing service, the admin will enter the bike details and tell the Telegram bot to send you a unique code. Use that code in the tracking section below.",
+    "thanksDismiss": "OK",
+    "auctionTrackTitle": "Foreign auction order",
+    "auctionTrackBody": "This area is only for customers who paid for sourcing / buying a bike from an abroad auction. You receive the access code in Telegram from the bot after payment, once the admin has filled in the bike information and told the bot to send the code.",
+    "auctionTrackLink": "Enter code from Telegram"
+  },
+  "services": {
+    "repair": "Motorcycle & powersports repair",
+    "parts": "Parts search & supply",
+    "pickup_georgia": "Bike sourcing in Georgia",
+    "tow_truck": "Motorcycle towing (equipped pickup)",
+    "auction_us_japan": "Auction purchase US / Japan"
+  },
+  "cabinet": {
+    "title": "Auction order tracking",
+    "flowIntro": "Only for customers who paid for sourcing a motorcycle from a foreign auction. The code is sent in Telegram by the bot after the admin has fully entered the bike data and told the bot to send the code.",
+    "hint": "Enter the code from the Telegram bot message.",
+    "codeLabel": "Code from Telegram",
+    "submit": "Open",
+    "invalid": "Enter a 4–12 character code."
+  },
+  "order": {
+    "notFound": "No code like this here (or it has not been issued yet). Check the bot message in Telegram.",
+    "notAuctionService": "In this demo this code belongs to another service. Tracking by code is only for foreign-auction orders.",
+    "code": "Access code",
+    "service": "Service type",
+    "status": "Status",
+    "arrival": "Estimated arrival",
+    "arrivalUnknown": "Not set yet",
+    "progressTitle": "Delivery progress",
+    "mediaTitle": "Photos & video",
+    "mediaEmpty": "No media yet — we will add reports as they appear.",
+    "historyTitle": "Update history",
+    "photo": "Photo",
+    "video": "Video",
+    "statuses": {
+      "new": "New",
+      "in_progress": "In progress",
+      "done": "Completed"
+    },
+    "progress": {
+      "processing": "Processing / purchase",
+      "shipping": "Shipping",
+      "customs": "Customs",
+      "georgia": "Arrived in Georgia",
+      "handover": "Handover to owner"
+    }
+  },
+  "timeline": {
+    "events": {
+      "order_created": "Tracking order registered (in production the code is sent by the Telegram bot after payment and admin actions)."
+    }
+  }
+}
