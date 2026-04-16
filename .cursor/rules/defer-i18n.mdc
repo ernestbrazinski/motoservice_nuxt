@@ -1,0 +1,12 @@
+---
+description: Do not prioritize i18n or translations until production
+alwaysApply: true
+---
+
+# Locale and translations (deferred)
+
+Multilingual support and translation work are **out of scope for now** and will be added at production.
+
+- Do **not** spend effort expanding `app/locales/*`, adding keys, or polishing copy across languages unless the user explicitly asks for that in a given task.
+- When changing UI strings for a feature, prefer the smallest change (e.g. one locale or inline text) rather than a full three-locale pass.
+- Do **not** refactor the i18n setup or introduce new locale machinery pre-production unless requested.

@@ -1,75 +1,23 @@
-# Nuxt Minimal Starter
+# Motoservice (frontend)
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+**Стадия: прототип.** Каркас UI и сценариев без продакшен-API; данные заявок в демо могут храниться локально в браузере.
 
-## Setup
+Веб-клиент для мотосервиса: ремонт и мототехника, запчасти, подбор по Грузии, эвакуатор, заказ с аукционов США/Японии. Полное описание требований — в [`docs/BRD.md`](docs/BRD.md).
 
-Make sure to install dependencies:
+Кратко по продукту:
 
-```bash
-# npm
-npm install
+- **Заявка на услугу** — общая форма; после отправки код в кабинет не выдаётся автоматически для всех услуг.
+- **Отслеживание по коду** — только для клиентов услуги **заказа с зарубежного аукциона**; код приходит **в Telegram от бота** после оплаты и после того, как администратор занесёт данные о мотоцикле и даст боту отмашку на отправку кода.
+- В кабинете по коду (для этого сценария): статус, этапы доставки, медиа, история обновлений; уведомления — через Telegram.
 
-# pnpm
-pnpm install
+Стек: **Nuxt 4** (Vue 3, Vite, Vue Router внутри фреймворка), TypeScript, **vue-i18n** (ru / en / ka), Sass. Режим **SPA** (`ssr: false`), чтобы совпадать с демо на `localStorage` (заявки, тема, язык). Темы: светлая и тёмная.
 
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
+## Команды
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+npm install          # после клонирования; postinstall запускает nuxt prepare
+npm run dev          # разработка (nuxt dev)
+npm run build        # продакшен-сборка (nuxt build)
+npm run preview      # предпросмотр последней сборки (nuxt preview)
+npm run generate     # статический вывод (nuxt generate), если нужен SSG
 ```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.

@@ -10,8 +10,10 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "lit": "^3.3.2",
     "nuxt": "^4.4.2",
     "sass": "^1.99.0",
+    "velair-ui": "file:../velair-ui",
     "vue": "^3.5.32",
     "vue-i18n": "^11.3.2",
     "vue-router": "^5.0.4"

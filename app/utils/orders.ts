@@ -3,7 +3,6 @@ export type ServiceSlug =
   | 'parts'
   | 'pickup_georgia'
   | 'tow_truck'
-  | 'auction_us_japan'
 
 export interface OrderMedia {
   id: string
@@ -13,7 +12,6 @@ export interface OrderMedia {
 
 export interface OrderTimelineEvent {
   id: string
-  /** i18n key under timeline.events.* */
   messageKey: string
   created_at: string
 }
@@ -21,32 +19,15 @@ export interface OrderTimelineEvent {
 export interface StoredOrder {
   unique_code: string
   service_type: ServiceSlug
-  /** i18n key under order.status.* */
   statusKey: string
   estimated_arrival_date: string | null
-  /** 0..4 — этапы прогресса из BRD */
   progress_stage: number
   media: OrderMedia[]
   timeline: OrderTimelineEvent[]
-  /** произвольный текст с формы заявки */
   client_notes?: string
 }
 
-/** Подбор/заказ с аукциона за границей — единственная услуга с отслеживанием по коду в этом разделе. */
-export const AUCTION_IMPORT_SERVICE_SLUG: ServiceSlug = 'auction_us_japan'
-
-export function isAuctionImportOrder(order: StoredOrder): boolean {
-  return order.service_type === AUCTION_IMPORT_SERVICE_SLUG
-}
-
 const STORAGE_KEY = 'motoservice-orders'
-
-function newId() {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID()
-  }
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
 
 function readAll(): Record<string, StoredOrder> {
   try {
@@ -89,7 +70,6 @@ export function createOrderFromForm(
   clientNotes?: string,
 ): StoredOrder {
   const unique_code = generateAccessCode()
-  const now = new Date().toISOString()
   const trimmed = clientNotes?.trim()
   return {
     unique_code,
@@ -98,13 +78,7 @@ export function createOrderFromForm(
     estimated_arrival_date: null,
     progress_stage: 0,
     media: [],
-    timeline: [
-      {
-        id: newId(),
-        messageKey: 'order_created',
-        created_at: now,
-      },
-    ],
+    timeline: [],
     ...(trimmed ? { client_notes: trimmed } : {}),
   }
 }
