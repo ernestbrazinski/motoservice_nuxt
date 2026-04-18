@@ -5,7 +5,22 @@
   },
   "nav": {
     "home": "Home",
-    "cabinet": "Admin"
+    "cabinet": "Admin",
+    "mainMenu": "Main menu",
+    "motorcycles": "Motorcycles",
+    "gear": "Gear",
+    "community": "Community",
+    "sale": "Sales",
+    "workshop": "Service & repair",
+    "parts": "Parts",
+    "rental": "Rental",
+    "bikeMatch": "Bike sourcing",
+    "tow": "Motorcycle towing",
+    "helmets": "Helmets",
+    "outerwear": "Outerwear",
+    "footwear": "Footwear",
+    "social": "Social",
+    "groupRides": "Group rides"
   },
   "theme": {
     "light": "Light",
@@ -42,8 +57,6 @@
     "loginSubmit": "Sign in",
     "loginError": "Incorrect password.",
     "notConfigured": "Admin password is not set for this build. Set the environment variable or use the development server (default password: admin).",
-    "dashboardTitle": "Admin",
-    "dashboardLead": "MVP shell — list and manage incoming requests here.",
     "logout": "Sign out"
   }
 }
