@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { headerNavItems } from "~/utils/headerNav";
 import { setTheme, theme } from "~/utils/theme";
+import { isSuperadminRole } from "~/utils/userRole";
 
 // Icons
 import { IconLogout } from "~/components/icons";
@@ -12,7 +13,7 @@ const { authed, user, logout } = useAuthSession();
 
 const showAdminLogout = computed(() => {
   if (!authed.value || !user.value?.role) return false;
-  return String(user.value.role).toLowerCase() === "superadmin";
+  return isSuperadminRole(user.value.role);
 });
 const navRoot = ref<HTMLElement | null>(null);
 const openMenuId = ref<string | null>(null);

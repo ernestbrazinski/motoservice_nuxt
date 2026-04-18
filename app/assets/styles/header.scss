@@ -115,6 +115,13 @@ vl-button.header__logout::part(button) {
   flex-wrap: wrap;
 }
 
+html[data-theme="light"] .header__submenu {
+  background: rgb(255, 255, 255);
+}
+html[data-theme="dark"] .header__submenu {
+  background: rgb(68, 68, 68);
+}
+
 .header__submenu li a {
   display: flex;
   justify-content: center;

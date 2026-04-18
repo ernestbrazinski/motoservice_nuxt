@@ -1,0 +1,9 @@
+:root {
+  // Colors
+  --vl-color-primary: var(--color-primary);
+  --vl-color-primary-hover: var(--color-primary-hover);
+  --vl-color-primary-active: var(--color-primary-active);
+
+  // Sizes
+  --vl-button-padding: calc(var(--base-size) * 0.8) calc(var(--base-size) * 1.6);
+}

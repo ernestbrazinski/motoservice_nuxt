@@ -8,8 +8,9 @@
 :root {
   --base-size: 10px;
 
-  --color-primary: #2563eb;
-  --color-primary-hover: #2268ff;
+  --color-primary: #d9480f;
+  --color-primary-hover: #f97316;
+  --color-primary-active: #9a3412;
 }
 
 :root[data-theme="light"] {
@@ -95,4 +96,15 @@ a {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
+}
+
+@media (max-width: $breakpoint-xl) {
+}
+@media (max-width: $breakpoint-md) {
+}
+@media (max-width: $breakpoint-sm) {
+}
+@media (max-width: $breakpoint-xs) {
+}
+@media (max-width: $breakpoint-xxs) {
 }

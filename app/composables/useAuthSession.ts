@@ -1,5 +1,7 @@
+import { computed } from "vue";
 import { toLoginFailureMessage } from "~/utils/auth-graphql";
 import { graphqlRequest } from "~/utils/graphql";
+import { isSuperadminRole } from "~/utils/userRole";
 
 export const AUTH_ACCESS_TOKEN_KEY = "motoservice_access_token";
 export const AUTH_USER_KEY = "motoservice_auth_user";
@@ -161,10 +163,13 @@ export function useAuthSession() {
     );
   }
 
+  const isSuperadmin = computed(() => isSuperadminRole(user.value?.role));
+
   return {
     authed,
     user,
     hydrated,
+    isSuperadmin,
     sync,
     hydrateFromToken,
     login,

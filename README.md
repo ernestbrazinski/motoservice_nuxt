@@ -21,3 +21,5 @@ npm run build        # продакшен-сборка (nuxt build)
 npm run preview      # предпросмотр последней сборки (nuxt preview)
 npm run generate     # статический вывод (nuxt generate), если нужен SSG
 ```
+
+**Кабинет / картинки в каталоге:** файлы из `public/upload/` доступны по пути вида `https://…/upload/…` — в админ-формах укажите, например, `/upload/photo.png`.

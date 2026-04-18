@@ -54,7 +54,8 @@ async function tryLogin() {
         wide
         autocomplete="username"
         :value="loginForm.email"
-        placeholder="Email"
+        placeholder="Логин"
+        float
         @vl-input="onEmailInput"
       />
       <vl-input
@@ -63,6 +64,7 @@ async function tryLogin() {
         autocomplete="current-password"
         :value="loginForm.password"
         :placeholder="t('admin.passwordLabel')"
+        float
         @vl-input="onPasswordInput"
       />
       <vl-button type="submit" :disabled="loginForm.loading">
