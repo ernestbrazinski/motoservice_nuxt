@@ -4,17 +4,12 @@ import { useCabinetToast } from "~/composables/useCabinetToast";
 import AdminCatalogBlocks from "./AdminCatalogBlocks.vue";
 
 const { hydrated, isSuperadmin } = useAuthSession();
-const {
-  notifOpen,
-  notifVariant,
-  notifText,
-  notifDelay,
-  dismiss,
-} = useCabinetToast();
+const { notifOpen, notifVariant, notifText, notifDelay, dismiss } =
+  useCabinetToast();
 </script>
 
 <template>
-  <div class="cabinet">
+  <div class="container">
     <vl-notification
       :open="notifOpen"
       :variant="notifVariant"

@@ -1,7 +1,12 @@
 import { ref, type Ref, type ComputedRef } from "vue";
 import { useAuthSession } from "./useAuthSession";
 import { useCabinetToast } from "./useCabinetToast";
-import { isValidKebabSlug, kebabSlugHint } from "~/utils/validateKebabSlug";
+import {
+  DISPLACEMENT_CC_MAX,
+  DISPLACEMENT_CC_MIN,
+  isShopCurrency,
+} from "~/constants/cabinetCatalog";
+import { isValidKebabSlug } from "~/utils/validateKebabSlug";
 
 export type AdminCategory = {
   id: number;
@@ -11,7 +16,6 @@ export type AdminCategory = {
 };
 
 export type AdminBrand = { id: number; name: string; slug: string };
-export type AdminTag = { id: number; name: string };
 export type AdminProduct = {
   id: number;
   title: string;
@@ -44,7 +48,6 @@ const QUERY_ADMIN_CATALOG = `
 query AdminCatalogContext {
   categories { id name slug parentId }
   brands { id name slug }
-  tags { id name }
   products(limit: 500) {
     id
     title
@@ -75,12 +78,6 @@ mutation CreateBrand($input: CreateBrandInput!) {
 }
 `;
 
-const M_CREATE_TAG = `
-mutation CreateTag($input: CreateTagInput!) {
-  createTag(input: $input) { id name }
-}
-`;
-
 const M_CREATE_PRODUCT = `
 mutation CreateProduct($input: CreateProductInput!) {
   createProduct(input: $input) { id title slug price currency brandId categoryId }
@@ -94,12 +91,6 @@ mutation AddProductImage($input: AddProductImageInput!) {
     url
     isMain
   }
-}
-`;
-
-const M_LINK_PRODUCT_TAG = `
-mutation LinkProductTag($productId: Int!, $tagId: Int!) {
-  linkProductTag(productId: $productId, tagId: $tagId)
 }
 `;
 
@@ -124,6 +115,7 @@ mutation CreateMotorcycleListing($input: CreateMotorcycleListingInput!) {
     brandId
     model
     year
+    displacementCc
     mileage
     mileageUnit
     vin
@@ -160,18 +152,19 @@ query AdminOrders {
 }
 `;
 
+/** Shared catalog lists so multiple cabinet components can call `useAdminCatalog()`. */
+const categories: Ref<AdminCategory[]> = ref([]);
+const brands: Ref<AdminBrand[]> = ref([]);
+const products: Ref<AdminProduct[]> = ref([]);
+const contextLoading = ref(false);
+const contextError = ref("");
+const orders: Ref<AdminOrder[]> = ref([]);
+const ordersLoading = ref(false);
+
 export function useAdminCatalog() {
   const { gqlAuthorized, isSuperadmin } = useAuthSession();
   const { show: toast } = useCabinetToast();
   const canAdmin: ComputedRef<boolean> = isSuperadmin;
-
-  const categories: Ref<AdminCategory[]> = ref([]);
-  const brands: Ref<AdminBrand[]> = ref([]);
-  const tags: Ref<AdminTag[]> = ref([]);
-  const products: Ref<AdminProduct[]> = ref([]);
-
-  const contextLoading = ref(false);
-  const contextError = ref("");
 
   async function loadContext() {
     if (!canAdmin.value) return;
@@ -181,12 +174,10 @@ export function useAdminCatalog() {
       const data = await gqlAuthorized<{
         categories: AdminCategory[];
         brands: AdminBrand[];
-        tags: AdminTag[];
         products: AdminProduct[];
       }>(QUERY_ADMIN_CATALOG, undefined);
       categories.value = data.categories ?? [];
       brands.value = data.brands ?? [];
-      tags.value = data.tags ?? [];
       products.value = data.products ?? [];
     } catch (e) {
       const m = e instanceof Error ? e.message : "Ошибка загрузки справочников";
@@ -196,9 +187,6 @@ export function useAdminCatalog() {
       contextLoading.value = false;
     }
   }
-
-  const orders: Ref<AdminOrder[]> = ref([]);
-  const ordersLoading = ref(false);
 
   async function loadOrders() {
     if (!canAdmin.value) return;
@@ -221,7 +209,7 @@ export function useAdminCatalog() {
     const t = slug.trim();
     if (!t) return `${label}: укажите slug`;
     if (!isValidKebabSlug(t)) {
-      return `${label}: неверный формат slug. ${kebabSlugHint()}`;
+      return `${label}: invalid slug (use kebab-case: a-z, 0-9, hyphens).`;
     }
     return true;
   }
@@ -291,23 +279,6 @@ export function useAdminCatalog() {
     }
   }
 
-  async function submitTag(name: string): Promise<boolean> {
-    const n = name.trim();
-    if (!n) {
-      toast("error", "Тег: укажите название");
-      return false;
-    }
-    try {
-      await gqlAuthorized(M_CREATE_TAG, { input: { name: n } });
-      toast("success", "Тег создан");
-      await loadContext();
-      return true;
-    } catch (e) {
-      toast("error", e instanceof Error ? e.message : "Ошибка");
-      return false;
-    }
-  }
-
   async function submitProduct(input: {
     title: string;
     slug: string;
@@ -333,8 +304,8 @@ export function useAdminCatalog() {
       return null;
     }
     const currency = input.currency.trim();
-    if (!currency) {
-      toast("error", "Товар: укажите валюту (например GEL)");
+    if (!isShopCurrency(currency)) {
+      toast("error", "Товар: выберите валюту GEL или USD");
       return null;
     }
     try {
@@ -426,8 +397,8 @@ export function useAdminCatalog() {
       return false;
     }
     const currency = input.currency.trim();
-    if (!currency) {
-      toast("error", "Товар: укажите валюту (например GEL)");
+    if (!isShopCurrency(currency)) {
+      toast("error", "Товар: выберите валюту GEL или USD");
       return false;
     }
     if (!id || !Number.isFinite(id)) {
@@ -460,6 +431,7 @@ export function useAdminCatalog() {
     brandId: number;
     model: string;
     year: number;
+    displacementCc: number;
     mileage: number;
     mileageUnit: "KM" | "MI" | null;
     vin: string;
@@ -481,6 +453,17 @@ export function useAdminCatalog() {
       toast("error", "Год: 1900–2100");
       return null;
     }
+    if (
+      input.displacementCc < DISPLACEMENT_CC_MIN ||
+      input.displacementCc > DISPLACEMENT_CC_MAX ||
+      !Number.isFinite(input.displacementCc)
+    ) {
+      toast(
+        "error",
+        `Кубатура: укажите объём двигателя ${DISPLACEMENT_CC_MIN}–${DISPLACEMENT_CC_MAX} см³`,
+      );
+      return null;
+    }
     if (input.mileage < 0 || !Number.isFinite(input.mileage)) {
       toast("error", "Укажите корректный пробег");
       return null;
@@ -491,14 +474,15 @@ export function useAdminCatalog() {
       return null;
     }
     const currency = input.currency.trim();
-    if (!currency) {
-      toast("error", "Укажите валюту");
+    if (!isShopCurrency(currency)) {
+      toast("error", "Выберите валюту GEL или USD");
       return null;
     }
     const gqlInput: Record<string, unknown> = {
       brandId: input.brandId,
       model,
       year: input.year,
+      displacementCc: input.displacementCc,
       mileage: input.mileage,
       vin,
       price,
@@ -544,46 +528,19 @@ export function useAdminCatalog() {
     }
   }
 
-  async function submitLinkTag(
-    productId: number | null,
-    tagId: number | null,
-  ): Promise<boolean> {
-    if (productId == null) {
-      toast("error", "Выберите товар");
-      return false;
-    }
-    if (tagId == null) {
-      toast("error", "Выберите тег");
-      return false;
-    }
-    try {
-      await gqlAuthorized(M_LINK_PRODUCT_TAG, { productId, tagId });
-      toast("success", "Тег привязан к товару");
-      return true;
-    } catch (e) {
-      toast("error", e instanceof Error ? e.message : "Ошибка");
-      return false;
-    }
-  }
-
   return {
     canAdmin,
     categories,
     brands,
-    tags,
     products,
     contextLoading,
     contextError,
     loadContext,
-    /** hint text for form labels */
-    slugHint: kebabSlugHint,
     submitCategory,
     submitBrand,
-    submitTag,
     submitProduct,
     submitAddProductImages,
     submitUpdateProduct,
-    submitLinkTag,
     submitMotorcycleListing,
     submitMotorcycleListingImage,
     orders,
