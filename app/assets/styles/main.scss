@@ -4,6 +4,7 @@
 
 // Pages
 @use "../../pages/cabinet/cabinet.scss" as *;
+@use "./home-banner.scss" as *;
 
 :root {
   --base-size: 10px;
@@ -79,6 +80,10 @@ a {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+}
+
+.main--header-submenu-open {
+  filter: blur(5px);
 }
 
 .footer {

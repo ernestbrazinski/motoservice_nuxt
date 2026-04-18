@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { headerNavItems } from "~/utils/headerNav";
 import { setTheme, theme } from "~/utils/theme";
@@ -10,6 +10,7 @@ import { IconLogout } from "~/components/icons";
 
 const { t } = useI18n();
 const { authed, user, logout } = useAuthSession();
+const { setHeaderSubmenuOpen } = useHeaderSubmenuOpen();
 
 const showAdminLogout = computed(() => {
   if (!authed.value || !user.value?.role) return false;
@@ -17,6 +18,10 @@ const showAdminLogout = computed(() => {
 });
 const navRoot = ref<HTMLElement | null>(null);
 const openMenuId = ref<string | null>(null);
+
+watch(openMenuId, (id) => {
+  setHeaderSubmenuOpen(id !== null);
+});
 
 function toggleMenu(id: string) {
   openMenuId.value = openMenuId.value === id ? null : id;
