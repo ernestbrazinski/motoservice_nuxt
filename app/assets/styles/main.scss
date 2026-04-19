@@ -31,17 +31,17 @@
 }
 
 html {
-  font-size: var(--base-size);
-}
-
-body {
-  margin: 0;
   font-family:
     "Roboto",
     system-ui,
     -apple-system,
     "Segoe UI",
     sans-serif;
+}
+
+body {
+  margin: 0;
+
   font-size: calc(var(--base-size) * 1.4);
   line-height: 1.5;
   color: var(--color-text);
@@ -84,6 +84,7 @@ a {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  transition: filter 0.3s ease;
 }
 
 .main--header-submenu-open {
@@ -108,13 +109,32 @@ a {
   padding-top: var(--header-height);
 }
 
+.page--home {
+  padding-top: 0;
+}
+
 @media (max-width: $breakpoint-xl) {
+  :root {
+    --base-size: 0.694vw;
+  }
 }
 @media (max-width: $breakpoint-md) {
+  :root {
+    --base-size: 0.977vw;
+  }
 }
 @media (max-width: $breakpoint-sm) {
+  :root {
+    --base-size: 1.302vw;
+  }
 }
 @media (max-width: $breakpoint-xs) {
+  :root {
+    --base-size: 2.273vw;
+  }
 }
 @media (max-width: $breakpoint-xxs) {
+  :root {
+    --base-size: 2.667vw;
+  }
 }

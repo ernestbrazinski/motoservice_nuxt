@@ -40,11 +40,6 @@
   gap: calc(var(--base-size) * 2.4);
 }
 
-.header__link {
-  text-decoration: none;
-  color: inherit;
-}
-
 vl-button.header__logout {
   display: inline-flex;
   color: inherit;
@@ -67,6 +62,7 @@ vl-button.header__logout::part(button) {
   flex-shrink: 0;
 }
 
+.header__link,
 .header__nav-trigger {
   display: inline-flex;
   align-items: center;
@@ -76,10 +72,19 @@ vl-button.header__logout::part(button) {
   border: none;
   background: none;
   font: inherit;
-  font-size: inherit;
+  font-size: calc(var(--base-size) * 1.6);
+  letter-spacing: calc(var(--base-size) * 0.1);
+  text-transform: uppercase;
+  font-weight: 300;
   color: inherit;
   cursor: pointer;
-  text-decoration: none;
+  text-decoration: none !important;
+  transition: color 0.3s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-primary);
+  }
 }
 
 .header__nav-trigger:hover,
@@ -116,15 +121,19 @@ vl-button.header__logout::part(button) {
   justify-content: center;
 }
 
+.header__submenu li:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.25);
+}
+
 .header__submenu li a {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: calc(var(--base-size) * 24);
-  height: calc(var(--base-size) * 24);
-  font-weight: 900;
+  width: calc(var(--base-size) * 30);
+  height: calc(var(--base-size) * 30);
+  font-weight: 300;
   text-transform: uppercase;
-  font-size: calc(var(--base-size) * 1.6);
+  font-size: calc(var(--base-size) * 3);
   letter-spacing: calc(var(--base-size) * 0.25);
   color: #fff;
   text-shadow: 0 0 1px rgba(0, 0, 0, 0.25);
