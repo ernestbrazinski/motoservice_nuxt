@@ -1,13 +1,15 @@
 {
   "app": {
     "name": "Motoservice",
-    "footer": "MVP: service requests stored locally for demo."
+    "footer": "MVP."
   },
   "nav": {
     "home": "Home",
     "cabinet": "Admin",
     "mainMenu": "Main menu",
     "motorcycles": "Motorcycles",
+    "service": "Service",
+    "store": "Shop",
     "gear": "Gear",
     "community": "Community",
     "sale": "Sales",
@@ -15,11 +17,11 @@
     "parts": "Parts",
     "rental": "Rental",
     "bikeMatch": "Bike sourcing",
-    "tow": "Motorcycle towing",
+    "tow": "Towing",
     "helmets": "Helmets",
     "outerwear": "Outerwear",
     "footwear": "Footwear",
-    "social": "Social",
+    "social": "Socials",
     "groupRides": "Group rides"
   },
   "theme": {
@@ -29,26 +31,6 @@
   },
   "locale": {
     "label": "Language"
-  },
-  "home": {
-    "title": "Motorcycle workshop & logistics",
-    "lead": "Repairs, parts, sourcing in Georgia, and equipped motorcycle towing.",
-    "servicesTitle": "Services",
-    "requestTitle": "Request a service",
-    "requestHint": "We will contact you about the service you chose.",
-    "serviceLabel": "Service",
-    "notesLabel": "Notes (optional)",
-    "notesPlaceholder": "Bike model, problem, contact preference…",
-    "submit": "Submit request",
-    "thanksTitle": "Request sent",
-    "thanksGeneric": "Thank you. We will follow up with you.",
-    "thanksDismiss": "OK"
-  },
-  "services": {
-    "repair": "Motorcycle & powersports repair",
-    "parts": "Parts search & supply",
-    "pickup_georgia": "Bike sourcing in Georgia",
-    "tow_truck": "Motorcycle towing (equipped pickup)"
   },
   "admin": {
     "loginTitle": "Admin sign-in",

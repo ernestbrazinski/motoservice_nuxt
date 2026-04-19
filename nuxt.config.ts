@@ -39,8 +39,7 @@ export default defineNuxtConfig({
     public: {
       /** GraphQL HTTP endpoint (`NUXT_PUBLIC_GRAPHQL_URL`; dev fallback matches backend default PORT). */
       graphqlUrl:
-        process.env.NUXT_PUBLIC_GRAPHQL_URL ||
-        "http://localhost:3030/graphql",
+        process.env.NUXT_PUBLIC_GRAPHQL_URL || "http://localhost:3030/graphql",
       /** Legacy; cabinet uses GraphQL JWT. */
       adminPassword: "",
     },
@@ -55,7 +54,7 @@ export default defineNuxtConfig({
       link: [
         {
           rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Twinkle+Star&display=swap",
+          href: "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Twinkle+Star&display=swap",
         },
       ],
     },

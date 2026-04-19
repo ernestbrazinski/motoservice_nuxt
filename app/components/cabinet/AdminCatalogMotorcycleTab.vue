@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import type { Ref } from "vue";
-import { computed, inject, reactive, ref } from "vue";
+import { computed, inject, reactive, ref, watch } from "vue";
 import { useAdminCatalog } from "~/composables/useAdminCatalog";
 import { useCabinetToast } from "~/composables/useCabinetToast";
 import CabinetImageUpload from "./CabinetImageUpload.vue";
 import { useCabinetPublicFileUrl } from "~/composables/useCabinetPublicFileUrl";
-import { CabinetAdminBusyKey } from "~/constants/cabinetInjection";
+import {
+  CabinetAdminBusyKey,
+  CabinetAdminPendingEditMotorcycleListingIdKey,
+} from "~/constants/cabinetInjection";
 import {
   DEFAULT_MILEAGE_UNIT,
   DEFAULT_SHOP_CURRENCY,
@@ -14,6 +17,7 @@ import {
   MILEAGE_UNIT_SELECT_OPTIONS,
   SHOP_CURRENCY_SELECT_OPTIONS,
   isMileageUnitUi,
+  normalizeShopCurrency,
   type MileageUnitUi,
   type ShopCurrency,
 } from "~/constants/cabinetCatalog";
@@ -21,11 +25,24 @@ import type { VlSelectOption } from "velair-ui";
 
 const props = defineProps<{ disabled: boolean }>();
 const adminBusy = inject(CabinetAdminBusyKey)!;
+const pendingEditMotorcycleListingId = inject(
+  CabinetAdminPendingEditMotorcycleListingIdKey,
+  ref<number | null>(null),
+);
 
 const { show: toastCabinet } = useCabinetToast();
-const { brands, submitMotorcycleListing, submitMotorcycleListingImage } =
-  useAdminCatalog();
+const {
+  brands,
+  motorcycleListings,
+  submitMotorcycleListing,
+  submitUpdateMotorcycleListing,
+  submitMotorcycleListingImage,
+  loadContext,
+} = useAdminCatalog();
 const imagePreviewSrc = useCabinetPublicFileUrl();
+
+/** Empty string = create; otherwise editing that listing id. */
+const editListingId = ref("");
 
 const bikeForm = reactive({
   brand: "",
@@ -42,6 +59,27 @@ const bikeForm = reactive({
 
 const bikePhotoUrls = ref<string[]>([]);
 
+const isEditMode = computed(() => Boolean(editListingId.value.trim()));
+
+const listingPickerOptions = computed((): VlSelectOption[] => {
+  const head: VlSelectOption[] = [{ value: "", label: "— новое объявление —" }];
+  const rest = [...motorcycleListings.value]
+    .sort((a, b) => b.id - a.id)
+    .map((l) => ({
+      value: String(l.id),
+      label: `${l.brand.name} ${l.model} (#${l.id})`,
+    }));
+  return [...head, ...rest];
+});
+
+const selectedListing = computed(() => {
+  const raw = editListingId.value.trim();
+  if (!raw) return null;
+  const id = Number.parseInt(raw, 10);
+  if (Number.isNaN(id)) return null;
+  return motorcycleListings.value.find((x) => x.id === id) ?? null;
+});
+
 const brandOptionsRequired = computed((): VlSelectOption[] => {
   const head: VlSelectOption[] = [
     { value: "", label: "— выберите бренд —", disabled: true },
@@ -52,6 +90,12 @@ const brandOptionsRequired = computed((): VlSelectOption[] => {
   }));
   return [...head, ...rest];
 });
+
+function mileageUnitFromApi(raw: string | null | undefined): MileageUnitUi {
+  const u = String(raw ?? "").toLowerCase();
+  if (u === "mi") return "MI";
+  return "KM";
+}
 
 function appendUploadedUrls(target: Ref<string[]>, urls: string[]) {
   if (!urls.length) return;
@@ -122,19 +166,136 @@ function onBikeDescriptionIn(e: Event) {
   onBikeStr("description", e);
 }
 
-async function onCreateMotorcycleListing() {
-  if (props.disabled || adminBusy.value) return;
+function resetBikeForm() {
+  editListingId.value = "";
+  bikeForm.brand = "";
+  bikeForm.model = "";
+  bikeForm.year = "";
+  bikeForm.displacementCc = "";
+  bikeForm.mileage = "";
+  bikeForm.mileageUnit = DEFAULT_MILEAGE_UNIT;
+  bikeForm.vin = "";
+  bikeForm.price = "";
+  bikeForm.currency = DEFAULT_SHOP_CURRENCY;
+  bikeForm.description = "";
+  bikePhotoUrls.value = [];
+}
+
+function applyListingSelection(listingIdStr: string) {
+  editListingId.value = listingIdStr;
+  bikePhotoUrls.value = [];
+  if (!listingIdStr.trim()) {
+    resetBikeForm();
+    return;
+  }
+  const l = motorcycleListings.value.find((x) => String(x.id) === listingIdStr);
+  if (!l) return;
+  bikeForm.brand = String(l.brandId);
+  bikeForm.model = l.model;
+  bikeForm.year = String(l.year);
+  bikeForm.displacementCc =
+    l.displacementCc != null ? String(l.displacementCc) : "";
+  bikeForm.mileage = String(l.mileage);
+  bikeForm.mileageUnit = mileageUnitFromApi(l.mileageUnit);
+  bikeForm.vin = l.vin;
+  bikeForm.price = l.price;
+  bikeForm.currency = normalizeShopCurrency(l.currency);
+  bikeForm.description = l.description ?? "";
+}
+
+function onListingPick(e: Event) {
+  const v = (e as CustomEvent<{ value: string }>).detail?.value;
+  if (v === undefined) return;
+  applyListingSelection(v);
+}
+
+watch(
+  pendingEditMotorcycleListingId,
+  (id) => {
+    if (id == null) return;
+    applyListingSelection(String(id));
+    pendingEditMotorcycleListingId.value = null;
+  },
+  { flush: "post" },
+);
+
+function buildPayload() {
   const brandId = bikeForm.brand
     ? Number.parseInt(bikeForm.brand, 10)
     : Number.NaN;
-  if (!bikeForm.brand || Number.isNaN(brandId)) {
-    toastCabinet("error", "Выберите бренд");
-    return;
-  }
   const year = Number.parseInt(bikeForm.year, 10);
   const mileage = Number.parseInt(bikeForm.mileage, 10);
   const dispRaw = bikeForm.displacementCc.trim();
   const displacementCc = Number.parseInt(dispRaw, 10);
+  return {
+    brandId,
+    year,
+    mileage,
+    displacementCc,
+    dispRaw,
+    payload: {
+      brandId,
+      model: bikeForm.model,
+      year,
+      displacementCc,
+      mileage,
+      mileageUnit: bikeForm.mileageUnit,
+      vin: bikeForm.vin,
+      price: bikeForm.price,
+      currency: bikeForm.currency,
+      description: bikeForm.description || null,
+    },
+  };
+}
+
+async function uploadPendingPhotos(listingId: number) {
+  const existing = motorcycleListings.value.find((l) => l.id === listingId);
+  const hadImages = (existing?.images?.length ?? 0) > 0;
+  const urls = [...bikePhotoUrls.value];
+  const photos = urls.map((url, i) => ({
+    url,
+    isMain: !hadImages && i === 0,
+    sortOrder: i,
+  }));
+  for (const p of photos) {
+    const ok = await submitMotorcycleListingImage({
+      listingId,
+      url: p.url,
+      isMain: p.isMain,
+      sortOrder: p.sortOrder,
+    });
+    if (!ok) {
+      await loadContext();
+      return false;
+    }
+  }
+  if (photos.length) {
+    toastCabinet("success", "Фото добавлены к объявлению");
+  }
+  return true;
+}
+
+async function onSubmitMotorcycleListing() {
+  if (props.disabled || adminBusy.value) return;
+  const { brandId, year, mileage, displacementCc, dispRaw, payload } =
+    buildPayload();
+  if (!bikeForm.brand || Number.isNaN(brandId)) {
+    toastCabinet("error", "Выберите бренд");
+    return;
+  }
+  if (Number.isNaN(year) || year < 1900 || year > 2100) {
+    toastCabinet("error", "Год: 1900–2100");
+    return;
+  }
+  if (Number.isNaN(mileage) || mileage < 0) {
+    toastCabinet("error", "Укажите корректный пробег");
+    return;
+  }
+  const vin = bikeForm.vin.trim();
+  if (vin.length < 5 || vin.length > 32) {
+    toastCabinet("error", "VIN: от 5 до 32 символов");
+    return;
+  }
   if (
     !dispRaw ||
     Number.isNaN(displacementCc) ||
@@ -149,48 +310,23 @@ async function onCreateMotorcycleListing() {
   }
   adminBusy.value = true;
   try {
-    const listingId = await submitMotorcycleListing({
-      brandId,
-      model: bikeForm.model,
-      year,
-      displacementCc,
-      mileage,
-      mileageUnit: bikeForm.mileageUnit,
-      vin: bikeForm.vin,
-      price: bikeForm.price,
-      currency: bikeForm.currency,
-      description: bikeForm.description || null,
-    });
-    if (listingId == null) return;
-    const urls = [...bikePhotoUrls.value];
-    const photos = urls.map((url, i) => ({
-      url,
-      isMain: i === 0,
-      sortOrder: i,
-    }));
-    for (const p of photos) {
-      const ok = await submitMotorcycleListingImage({
-        listingId,
-        url: p.url,
-        isMain: p.isMain,
-        sortOrder: p.sortOrder,
-      });
+    if (isEditMode.value) {
+      const id = Number.parseInt(editListingId.value, 10);
+      if (Number.isNaN(id)) return;
+      const ok = await submitUpdateMotorcycleListing(id, payload);
       if (!ok) return;
+      const photosOk = await uploadPendingPhotos(id);
+      if (!photosOk) return;
+      await loadContext();
+      resetBikeForm();
+      return;
     }
-    if (photos.length) {
-      toastCabinet("success", "Фото добавлены к объявлению");
-    }
-    bikeForm.brand = "";
-    bikeForm.model = "";
-    bikeForm.year = "";
-    bikeForm.displacementCc = "";
-    bikeForm.mileage = "";
-    bikeForm.mileageUnit = DEFAULT_MILEAGE_UNIT;
-    bikeForm.vin = "";
-    bikeForm.price = "";
-    bikeForm.currency = DEFAULT_SHOP_CURRENCY;
-    bikeForm.description = "";
-    bikePhotoUrls.value = [];
+    const listingId = await submitMotorcycleListing(payload);
+    if (listingId == null) return;
+    const photosOk = await uploadPendingPhotos(listingId);
+    if (!photosOk) return;
+    await loadContext();
+    resetBikeForm();
   } finally {
     adminBusy.value = false;
   }
@@ -205,7 +341,20 @@ async function onCreateMotorcycleListing() {
         Несколько фото: загружайте по одному или выберите несколько сразу.
         Первое в списке — главное фото объявления.
       </p>
-      <form class="form-grid" @submit.prevent="onCreateMotorcycleListing">
+      <label class="form-label form-label--full mb-16">
+        <span>Объявление</span>
+        <vl-select
+          wide
+          :value="editListingId"
+          :options="listingPickerOptions"
+          @vl-change="onListingPick"
+        />
+      </label>
+      <p v-if="isEditMode" class="admin-section__hint">
+        Редактирование #{{ editListingId }}. Новые фото добавятся к существующим
+        после сохранения.
+      </p>
+      <form class="form-admin" @submit.prevent="onSubmitMotorcycleListing">
         <label class="form-label form-label--full">
           <span>Бренд</span>
           <vl-select
@@ -288,8 +437,33 @@ async function onCreateMotorcycleListing() {
             @vl-change="onBikeCurrencyChange"
           />
         </label>
+        <div
+          v-if="selectedListing?.images?.length"
+          class="form-label form-label--full"
+        >
+          <span>Текущие фото в объявлении</span>
+          <ul class="admin-uploaded-list" role="list">
+            <li
+              v-for="im in selectedListing.images"
+              :key="im.id"
+              class="admin-uploaded-list__item admin-uploaded-list__item--readonly"
+            >
+              <img
+                class="admin-upload-thumb"
+                :src="imagePreviewSrc(im.url)"
+                alt=""
+                width="72"
+                height="72"
+                loading="lazy"
+              />
+              <span v-if="im.isMain" class="admin-uploaded-list__badge"
+                >главное</span
+              >
+            </li>
+          </ul>
+        </div>
         <div class="form-label form-label--full cabinet-photo-row">
-          <span>Фото</span>
+          <span>{{ isEditMode ? "Добавить фото" : "Фото" }}</span>
           <CabinetImageUpload
             :multiple="true"
             :disabled="disabled"
@@ -313,9 +487,9 @@ async function onCreateMotorcycleListing() {
                 height="72"
                 loading="lazy"
               />
-              <span v-if="idx === 0" class="admin-uploaded-list__badge"
-                >главное</span
-              >
+              <span v-if="idx === 0" class="admin-uploaded-list__badge">{{
+                isEditMode ? "новое" : "главное"
+              }}</span>
               <vl-button
                 type="button"
                 :disabled="disabled"
@@ -337,9 +511,21 @@ async function onCreateMotorcycleListing() {
             @vl-input="onBikeDescriptionIn"
           />
         </label>
-        <div class="form-label form-label--full">
+        <div class="form-label form-label--full form-admin__actions-row">
           <vl-button type="submit" :disabled="disabled">
-            Создать объявление и фото
+            {{
+              isEditMode
+                ? "Сохранить объявление и новые фото"
+                : "Создать объявление и фото"
+            }}
+          </vl-button>
+          <vl-button
+            v-if="isEditMode"
+            type="button"
+            :disabled="disabled"
+            @click="resetBikeForm"
+          >
+            Отмена
           </vl-button>
         </div>
       </form>

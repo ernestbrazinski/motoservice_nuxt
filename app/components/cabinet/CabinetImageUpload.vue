@@ -3,6 +3,9 @@ import { ref } from "vue";
 import { uploadCabinetImage } from "~/utils/cabinet-upload";
 import { useCabinetToast } from "~/composables/useCabinetToast";
 
+// Icons
+import { IconUpload } from "~/components/icons";
+
 const props = withDefaults(
   defineProps<{
     multiple?: boolean;
@@ -75,7 +78,7 @@ async function onChange(e: Event) {
       :disabled="disabled || uploading"
       @click="openPicker"
     >
-      {{ uploading ? buttonTextUploading : buttonText }}
+      <IconUpload />
     </vl-button>
   </div>
 </template>

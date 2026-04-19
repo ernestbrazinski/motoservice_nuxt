@@ -1,4 +1,9 @@
-export type HeaderNavChild = { labelKey: string; to: string };
+export type HeaderNavChild = {
+  labelKey: string;
+  to: string;
+  /** Optional image URL from /public (e.g. /header-menu/sale.webp). */
+  imageSrc?: string;
+};
 
 export type HeaderNavItem =
   | { kind: "link"; labelKey: string; to: string }
@@ -11,22 +16,35 @@ export const headerNavItems: HeaderNavItem[] = [
     id: "motorcycles",
     labelKey: "nav.motorcycles",
     children: [
-      { labelKey: "nav.sale", to: "/" },
-      { labelKey: "nav.workshop", to: "/" },
-      { labelKey: "nav.parts", to: "/" },
-      { labelKey: "nav.rental", to: "/" },
-      { labelKey: "nav.bikeMatch", to: "/" },
-      { labelKey: "nav.tow", to: "/" },
+      { labelKey: "nav.sale", to: "/", imageSrc: "/header-menu/sale.webp" },
+      { labelKey: "nav.rental", to: "/", imageSrc: "/header-menu/rent.webp" },
     ],
   },
   {
     kind: "menu",
-    id: "gear",
-    labelKey: "nav.gear",
+    id: "service",
+    labelKey: "nav.service",
     children: [
-      { labelKey: "nav.helmets", to: "/" },
-      { labelKey: "nav.outerwear", to: "/" },
-      { labelKey: "nav.footwear", to: "/" },
+      {
+        labelKey: "nav.workshop",
+        to: "/",
+        imageSrc: "/header-menu/repair.webp",
+      },
+      {
+        labelKey: "nav.bikeMatch",
+        to: "/",
+        imageSrc: "/header-menu/selection.webp",
+      },
+      { labelKey: "nav.tow", to: "/", imageSrc: "/header-menu/evacuator.webp" },
+    ],
+  },
+  {
+    kind: "menu",
+    id: "store",
+    labelKey: "nav.store",
+    children: [
+      { labelKey: "nav.gear", to: "/", imageSrc: "/header-menu/equip.webp" },
+      { labelKey: "nav.parts", to: "/", imageSrc: "/header-menu/parts.webp" },
     ],
   },
   {
@@ -34,8 +52,16 @@ export const headerNavItems: HeaderNavItem[] = [
     id: "community",
     labelKey: "nav.community",
     children: [
-      { labelKey: "nav.social", to: "/" },
-      { labelKey: "nav.groupRides", to: "/" },
+      {
+        labelKey: "nav.social",
+        to: "/",
+        imageSrc: "/header-menu/socials.webp",
+      },
+      {
+        labelKey: "nav.groupRides",
+        to: "/",
+        imageSrc: "/header-menu/trips.webp",
+      },
     ],
   },
 ];

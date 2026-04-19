@@ -1,9 +1,5 @@
 /** Admin catalog sub-tabs inside the cabinet (URL `?tab=` slug). */
-export type CabinetAdminTab =
-  | "refs"
-  | "newProduct"
-  | "editProduct"
-  | "motorcycle";
+export type CabinetAdminTab = "refs" | "newProduct" | "motorcycle";
 
 export const CABINET_ADMIN_TAB_QUERY = "tab";
 
@@ -11,8 +7,12 @@ export const CABINET_ADMIN_TAB_QUERY = "tab";
 export const CABINET_ADMIN_TAB_TO_QUERY: Record<CabinetAdminTab, string> = {
   refs: "refs",
   newProduct: "new-product",
-  editProduct: "edit-product",
   motorcycle: "motorcycle",
+};
+
+/** Old URLs `?tab=edit-product` open the merged product tab. */
+const LEGACY_TAB_QUERY_TO_TAB: Record<string, CabinetAdminTab> = {
+  "edit-product": "newProduct",
 };
 
 const QUERY_TO_TAB = Object.fromEntries(
@@ -27,5 +27,5 @@ export function cabinetAdminTabFromQuery(raw: unknown): CabinetAdminTab | null {
   if (raw == null) return null;
   const s = Array.isArray(raw) ? raw[0] : raw;
   if (typeof s !== "string" || !s) return null;
-  return QUERY_TO_TAB[s] ?? null;
+  return QUERY_TO_TAB[s] ?? LEGACY_TAB_QUERY_TO_TAB[s] ?? null;
 }

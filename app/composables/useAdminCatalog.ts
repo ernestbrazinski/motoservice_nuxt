@@ -15,7 +15,12 @@ export type AdminCategory = {
   parentId: number | null;
 };
 
-export type AdminBrand = { id: number; name: string; slug: string };
+export type AdminBrand = {
+  id: number;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+};
 export type AdminProduct = {
   id: number;
   title: string;
@@ -26,6 +31,22 @@ export type AdminProduct = {
   brandId: number | null;
   categoryId: number | null;
   images?: { id: number; url: string; isMain: boolean }[];
+};
+
+export type AdminMotorcycleListing = {
+  id: number;
+  brandId: number;
+  model: string;
+  year: number;
+  displacementCc: number | null;
+  mileage: number;
+  mileageUnit: string;
+  vin: string;
+  price: string;
+  currency: string;
+  description: string | null;
+  brand: { id: number; name: string; slug: string; logoUrl?: string | null };
+  images?: { id: number; url: string; isMain: boolean; sortOrder: number }[];
 };
 export type AdminOrder = {
   id: number;
@@ -47,7 +68,7 @@ export type AdminOrder = {
 const QUERY_ADMIN_CATALOG = `
 query AdminCatalogContext {
   categories { id name slug parentId }
-  brands { id name slug }
+  brands { id name slug logoUrl }
   products(limit: 500) {
     id
     title
@@ -63,6 +84,31 @@ query AdminCatalogContext {
       isMain
     }
   }
+  motorcycleListings(limit: 500) {
+    id
+    brandId
+    model
+    year
+    displacementCc
+    mileage
+    mileageUnit
+    vin
+    price
+    currency
+    description
+    brand {
+      id
+      name
+      slug
+      logoUrl
+    }
+    images {
+      id
+      url
+      isMain
+      sortOrder
+    }
+  }
 }
 `;
 
@@ -75,6 +121,30 @@ mutation CreateCategory($input: CreateCategoryInput!) {
 const M_CREATE_BRAND = `
 mutation CreateBrand($input: CreateBrandInput!) {
   createBrand(input: $input) { id name slug logoUrl }
+}
+`;
+
+const M_UPDATE_CATEGORY = `
+mutation UpdateCategory($id: Int!, $input: CreateCategoryInput!) {
+  updateCategory(id: $id, input: $input) { id name slug parentId }
+}
+`;
+
+const M_DELETE_CATEGORY = `
+mutation DeleteCategory($id: Int!) {
+  deleteCategory(id: $id)
+}
+`;
+
+const M_UPDATE_BRAND = `
+mutation UpdateBrand($id: Int!, $input: CreateBrandInput!) {
+  updateBrand(id: $id, input: $input) { id name slug logoUrl }
+}
+`;
+
+const M_DELETE_BRAND = `
+mutation DeleteBrand($id: Int!) {
+  deleteBrand(id: $id)
 }
 `;
 
@@ -137,6 +207,30 @@ mutation AddMotorcycleListingImage($input: AddMotorcycleListingImageInput!) {
 }
 `;
 
+const M_UPDATE_MOTORCYCLE_LISTING = `
+mutation UpdateMotorcycleListing($id: Int!, $input: CreateMotorcycleListingInput!) {
+  updateMotorcycleListing(id: $id, input: $input) {
+    id
+    brandId
+    model
+    year
+    displacementCc
+    mileage
+    mileageUnit
+    vin
+    price
+    currency
+    description
+  }
+}
+`;
+
+const M_DELETE_MOTORCYCLE_LISTING = `
+mutation DeleteMotorcycleListing($id: Int!) {
+  deleteMotorcycleListing(id: $id)
+}
+`;
+
 const QUERY_ORDERS = `
 query AdminOrders {
   orders {
@@ -161,6 +255,8 @@ const contextError = ref("");
 const orders: Ref<AdminOrder[]> = ref([]);
 const ordersLoading = ref(false);
 
+const motorcycleListings: Ref<AdminMotorcycleListing[]> = ref([]);
+
 export function useAdminCatalog() {
   const { gqlAuthorized, isSuperadmin } = useAuthSession();
   const { show: toast } = useCabinetToast();
@@ -175,10 +271,26 @@ export function useAdminCatalog() {
         categories: AdminCategory[];
         brands: AdminBrand[];
         products: AdminProduct[];
+        motorcycleListings: AdminMotorcycleListing[];
       }>(QUERY_ADMIN_CATALOG, undefined);
       categories.value = data.categories ?? [];
-      brands.value = data.brands ?? [];
+      brands.value = (data.brands ?? []).map((b) => ({
+        id: b.id,
+        name: b.name,
+        slug: b.slug,
+        logoUrl: b.logoUrl ?? null,
+      }));
       products.value = data.products ?? [];
+      motorcycleListings.value = (data.motorcycleListings ?? []).map((row) => ({
+        ...row,
+        brand: row.brand ?? {
+          id: row.brandId,
+          name: `#${row.brandId}`,
+          slug: "",
+          logoUrl: null,
+        },
+        images: row.images ?? [],
+      }));
     } catch (e) {
       const m = e instanceof Error ? e.message : "Ошибка загрузки справочников";
       contextError.value = m;
@@ -271,6 +383,113 @@ export function useAdminCatalog() {
         },
       });
       toast("success", "Бренд создан");
+      await loadContext();
+      return true;
+    } catch (e) {
+      toast("error", e instanceof Error ? e.message : "Ошибка");
+      return false;
+    }
+  }
+
+  async function submitUpdateCategory(
+    id: number,
+    input: { name: string; slug: string; parentId: number | null },
+  ): Promise<boolean> {
+    const n = input.name.trim();
+    if (!n) {
+      toast("error", "Категория: укажите название");
+      return false;
+    }
+    const slugChk = checkKebabSlug("Категория", input.slug);
+    if (slugChk !== true) {
+      toast("error", slugChk);
+      return false;
+    }
+    if (!id || !Number.isFinite(id)) {
+      toast("error", "Категория: некорректный id");
+      return false;
+    }
+    try {
+      await gqlAuthorized(M_UPDATE_CATEGORY, {
+        id,
+        input: {
+          name: n,
+          slug: input.slug.trim(),
+          parentId: input.parentId,
+        },
+      });
+      toast("success", "Категория обновлена");
+      await loadContext();
+      return true;
+    } catch (e) {
+      toast("error", e instanceof Error ? e.message : "Ошибка");
+      return false;
+    }
+  }
+
+  async function submitDeleteCategory(id: number): Promise<boolean> {
+    if (!id || !Number.isFinite(id)) {
+      toast("error", "Категория: некорректный id");
+      return false;
+    }
+    try {
+      await gqlAuthorized(M_DELETE_CATEGORY, { id });
+      toast("success", "Категория удалена");
+      await loadContext();
+      return true;
+    } catch (e) {
+      toast("error", e instanceof Error ? e.message : "Ошибка");
+      return false;
+    }
+  }
+
+  async function submitUpdateBrand(input: {
+    id: number;
+    name: string;
+    slug: string;
+    logoUrl: string;
+  }): Promise<boolean> {
+    const n = input.name.trim();
+    if (!n) {
+      toast("error", "Бренд: укажите название");
+      return false;
+    }
+    const slugChk = checkKebabSlug("Бренд", input.slug);
+    if (slugChk !== true) {
+      toast("error", slugChk);
+      return false;
+    }
+    if (!input.id || !Number.isFinite(input.id)) {
+      toast("error", "Бренд: некорректный id");
+      return false;
+    }
+    const logo = input.logoUrl.trim();
+    try {
+      await gqlAuthorized(M_UPDATE_BRAND, {
+        id: input.id,
+        input: {
+          name: n,
+          slug: input.slug.trim(),
+          logoUrl: logo || null,
+        },
+      });
+      toast("success", "Бренд обновлён");
+      await loadContext();
+      return true;
+    } catch (e) {
+      toast("error", e instanceof Error ? e.message : "Ошибка");
+      return false;
+    }
+  }
+
+  async function submitDeleteBrand(id: number): Promise<boolean> {
+    if (!id || !Number.isFinite(id)) {
+      toast("error", "Бренд: некорректный id");
+      return false;
+    }
+    try {
+      await gqlAuthorized(M_DELETE_BRAND, { id });
+      toast("success", "Бренд удалён");
       await loadContext();
       return true;
     } catch (e) {
@@ -497,10 +716,112 @@ export function useAdminCatalog() {
         createMotorcycleListing: { id: number };
       }>(M_CREATE_MOTORCYCLE_LISTING, { input: gqlInput });
       toast("success", "Объявление о мотоцикле создано");
-      return data.createMotorcycleListing.id;
+      const newId = data.createMotorcycleListing.id;
+      return newId;
     } catch (e) {
       toast("error", e instanceof Error ? e.message : "Ошибка");
       return null;
+    }
+  }
+
+  async function submitUpdateMotorcycleListing(
+    id: number,
+    input: {
+      brandId: number;
+      model: string;
+      year: number;
+      displacementCc: number;
+      mileage: number;
+      mileageUnit: "KM" | "MI" | null;
+      vin: string;
+      price: string;
+      currency: string;
+      description: string | null;
+    },
+  ): Promise<boolean> {
+    const model = input.model.trim();
+    if (!model) {
+      toast("error", "Мото: укажите модель");
+      return false;
+    }
+    const vin = input.vin.trim();
+    if (vin.length < 5 || vin.length > 32) {
+      toast("error", "VIN: от 5 до 32 символов");
+      return false;
+    }
+    if (input.year < 1900 || input.year > 2100) {
+      toast("error", "Год: 1900–2100");
+      return false;
+    }
+    if (
+      input.displacementCc < DISPLACEMENT_CC_MIN ||
+      input.displacementCc > DISPLACEMENT_CC_MAX ||
+      !Number.isFinite(input.displacementCc)
+    ) {
+      toast(
+        "error",
+        `Кубатура: укажите объём двигателя ${DISPLACEMENT_CC_MIN}–${DISPLACEMENT_CC_MAX} см³`,
+      );
+      return false;
+    }
+    if (input.mileage < 0 || !Number.isFinite(input.mileage)) {
+      toast("error", "Укажите корректный пробег");
+      return false;
+    }
+    const price = input.price.trim();
+    if (!price) {
+      toast("error", "Укажите цену");
+      return false;
+    }
+    const currency = input.currency.trim();
+    if (!isShopCurrency(currency)) {
+      toast("error", "Выберите валюту GEL или USD");
+      return false;
+    }
+    if (!id || !Number.isFinite(id)) {
+      toast("error", "Некорректный id объявления");
+      return false;
+    }
+    const gqlInput: Record<string, unknown> = {
+      brandId: input.brandId,
+      model,
+      year: input.year,
+      displacementCc: input.displacementCc,
+      mileage: input.mileage,
+      vin,
+      price,
+      currency,
+      description: input.description?.trim() || null,
+    };
+    if (input.mileageUnit === "KM" || input.mileageUnit === "MI") {
+      gqlInput.mileageUnit = input.mileageUnit;
+    }
+    try {
+      await gqlAuthorized(M_UPDATE_MOTORCYCLE_LISTING, {
+        id,
+        input: gqlInput,
+      });
+      toast("success", "Объявление обновлено");
+      return true;
+    } catch (e) {
+      toast("error", e instanceof Error ? e.message : "Ошибка");
+      return false;
+    }
+  }
+
+  async function submitDeleteMotorcycleListing(id: number): Promise<boolean> {
+    if (!id || !Number.isFinite(id)) {
+      toast("error", "Некорректный id объявления");
+      return false;
+    }
+    try {
+      await gqlAuthorized(M_DELETE_MOTORCYCLE_LISTING, { id });
+      toast("success", "Объявление удалено");
+      await loadContext();
+      return true;
+    } catch (e) {
+      toast("error", e instanceof Error ? e.message : "Ошибка");
+      return false;
     }
   }
 
@@ -533,15 +854,22 @@ export function useAdminCatalog() {
     categories,
     brands,
     products,
+    motorcycleListings,
     contextLoading,
     contextError,
     loadContext,
     submitCategory,
+    submitUpdateCategory,
+    submitDeleteCategory,
     submitBrand,
+    submitUpdateBrand,
+    submitDeleteBrand,
     submitProduct,
     submitAddProductImages,
     submitUpdateProduct,
     submitMotorcycleListing,
+    submitUpdateMotorcycleListing,
+    submitDeleteMotorcycleListing,
     submitMotorcycleListingImage,
     orders,
     ordersLoading,

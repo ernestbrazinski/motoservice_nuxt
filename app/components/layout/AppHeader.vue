@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import { useI18n } from "vue-i18n";
 import { headerNavItems } from "~/utils/headerNav";
 import { setTheme, theme } from "~/utils/theme";
 import { isSuperadminRole } from "~/utils/userRole";
 
 // Icons
-import { IconLogout } from "~/components/icons";
+import { IconChevronDown, IconLogout } from "~/components/icons";
 
 const { t } = useI18n();
 const { authed, user, logout } = useAuthSession();
@@ -17,7 +24,18 @@ const showAdminLogout = computed(() => {
   return isSuperadminRole(user.value.role);
 });
 const navRoot = ref<HTMLElement | null>(null);
+const headerEl = ref<HTMLElement | null>(null);
 const openMenuId = ref<string | null>(null);
+
+let headerResizeObserver: ResizeObserver | null = null;
+
+/** Syncs `--header-height` on `<html>` from the fixed header box (wraps on narrow viewports). */
+function syncHeaderHeightCssVar() {
+  const el = headerEl.value;
+  if (!el || typeof document === "undefined") return;
+  const h = Math.round(el.getBoundingClientRect().height);
+  document.documentElement.style.setProperty("--header-height", `${h}px`);
+}
 
 watch(openMenuId, (id) => {
   setHeaderSubmenuOpen(id !== null);
@@ -41,14 +59,24 @@ function onEscape(e: KeyboardEvent) {
   if (e.key === "Escape") closeMenus();
 }
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener("pointerdown", onDocPointerDown, true);
   document.addEventListener("keydown", onEscape);
+
+  await nextTick();
+  syncHeaderHeightCssVar();
+  if (typeof ResizeObserver !== "undefined" && headerEl.value) {
+    headerResizeObserver = new ResizeObserver(() => syncHeaderHeightCssVar());
+    headerResizeObserver.observe(headerEl.value);
+  }
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener("pointerdown", onDocPointerDown, true);
   document.removeEventListener("keydown", onEscape);
+  headerResizeObserver?.disconnect();
+  headerResizeObserver = null;
+  document.documentElement.style.removeProperty("--header-height");
 });
 
 function onThemeChange(e: Event) {
@@ -59,7 +87,7 @@ function onThemeChange(e: Event) {
 </script>
 
 <template>
-  <header class="header">
+  <header ref="headerEl" class="header">
     <div class="container">
       <div class="header__logo">
         <NuxtLink to="/"> MotoService </NuxtLink>
@@ -75,7 +103,7 @@ function onThemeChange(e: Event) {
             class="header__link"
             >{{ t(item.labelKey) }}</NuxtLink
           >
-          <div v-else class="header__nav-item">
+          <div v-else>
             <button
               type="button"
               class="header__nav-trigger"
@@ -84,7 +112,11 @@ function onThemeChange(e: Event) {
               @click.stop="toggleMenu(item.id)"
             >
               {{ t(item.labelKey) }}
-              <span class="header__nav-chevron" aria-hidden="true" />
+              <IconChevronDown
+                class="header__nav-chevron"
+                :size="16"
+                aria-hidden="true"
+              />
             </button>
             <ul
               v-show="openMenuId === item.id"
@@ -93,16 +125,30 @@ function onThemeChange(e: Event) {
             >
               <li
                 v-for="child in item.children"
-                :key="child.labelKey"
+                :key="child.labelKey + (child.imageSrc ?? '')"
                 role="none"
               >
                 <NuxtLink
                   role="menuitem"
                   :to="child.to"
                   class="header__submenu-link"
+                  :class="{
+                    'header__submenu-link--with-image': child.imageSrc,
+                  }"
                   @click="closeMenus"
-                  >{{ t(child.labelKey) }}</NuxtLink
                 >
+                  <img
+                    v-if="child.imageSrc"
+                    class="header__submenu-thumb"
+                    :src="child.imageSrc"
+                    :alt="''"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span class="header__submenu-label">{{
+                    t(child.labelKey)
+                  }}</span>
+                </NuxtLink>
               </li>
             </ul>
           </div>
