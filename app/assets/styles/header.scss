@@ -1,4 +1,5 @@
-// Fallback until `AppHeader` measures the fixed bar and sets `--header-height` on `<html>`.
+@use "./vars.scss" as *;
+
 :root {
   --header-height: calc(var(--base-size) * 6.5);
 }
@@ -9,6 +10,9 @@
   left: 0;
   right: 0;
   z-index: 100;
+}
+.header.cabinet {
+  background: #0f0f10;
 }
 
 .header .container {
@@ -28,33 +32,41 @@
 .header__logo a {
   font-weight: 600;
   text-decoration: none;
-  color: var(--color-text);
+  color: #fff;
   font-size: calc(var(--base-size) * 2.5);
   font-family: "Twinkle Star", cursive;
 }
 
-.header__nav {
+.header__menu-toggle {
+  display: none;
+}
+
+.header__nav-backdrop {
+  display: none;
+}
+
+.header__nav-item {
+  position: relative;
+}
+
+.header__nav-main {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: calc(var(--base-size) * 2.4);
-}
-
-vl-button.header__logout {
-  display: inline-flex;
-  color: inherit;
-}
-
-vl-button.header__logout::part(button) {
-  cursor: pointer;
-  border: none;
-  background: none;
-  padding: 0;
-  font: inherit;
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  color: inherit;
+  gap: calc(var(--base-size) * 2.4);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.header__nav {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: calc(var(--base-size) * 1.5);
 }
 
 .header__logout-icon {
@@ -76,7 +88,8 @@ vl-button.header__logout::part(button) {
   letter-spacing: calc(var(--base-size) * 0.1);
   text-transform: uppercase;
   font-weight: 300;
-  color: inherit;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   cursor: pointer;
   text-decoration: none !important;
   transition: color 0.3s ease;
@@ -122,15 +135,15 @@ vl-button.header__logout::part(button) {
 }
 
 .header__submenu li:not(:last-child) {
-  border-right: 1px solid rgba(255, 255, 255, 0.25);
+  border-right: 1px solid rgba(255, 255, 255, 0.75);
 }
 
 .header__submenu li a {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: calc(var(--base-size) * 30);
-  height: calc(var(--base-size) * 30);
+  width: calc(var(--base-size) * 34);
+  height: calc(var(--base-size) * 34);
   font-weight: 300;
   text-transform: uppercase;
   font-size: calc(var(--base-size) * 3);
@@ -178,4 +191,157 @@ vl-button.header__logout::part(button) {
   justify-content: flex-end;
   gap: calc(var(--base-size) * 1.5);
   width: calc(var(--base-size) * 18);
+  color: #fff;
+}
+
+@media (max-width: $breakpoint-md) {
+  .header .container {
+    padding: calc(var(--base-size) * 1.6);
+    position: relative;
+    z-index: 2;
+  }
+
+  .header__nav-backdrop {
+    display: block;
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .header__menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: auto;
+    padding: calc(var(--base-size) * 0.6);
+    border: none;
+    border-radius: calc(var(--base-size) * 0.5);
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .header__menu-toggle:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .header__nav {
+    position: fixed;
+    top: var(--header-height);
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: min(100%, calc(var(--base-size) * 42));
+    max-width: 100%;
+    margin: 0;
+    flex: none;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #0f0f10;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: -8px 0 28px rgba(0, 0, 0, 0.4);
+    z-index: 2;
+    transform: translateX(100%);
+    transition:
+      transform 0.28s ease,
+      visibility 0.28s;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  .header__nav-main {
+    flex: 1 1 auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    min-height: 0;
+    padding: calc(var(--base-size) * 1) 0 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .header__nav.header__nav--open {
+    transform: translateX(0);
+    pointer-events: auto;
+    visibility: visible;
+  }
+
+  .header__link,
+  .header__nav-trigger {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+    padding: calc(var(--base-size) * 1.2) calc(var(--base-size) * 1.6);
+    justify-content: flex-start;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .header__submenu {
+    position: static;
+    left: auto;
+    transform: none;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    width: 100%;
+    max-width: none;
+    padding: 0 0 calc(var(--base-size) * 0.75);
+    background: rgba(0, 0, 0, 0.22);
+  }
+
+  .header__submenu li:not(:last-child) {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .header__submenu li a {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    min-height: calc(var(--base-size) * 5.5);
+    justify-content: flex-start;
+    gap: calc(var(--base-size) * 1.2);
+    padding: calc(var(--base-size) * 1) calc(var(--base-size) * 1.6);
+    font-size: calc(var(--base-size) * 1.35);
+    text-align: left;
+  }
+
+  .header__submenu li a img {
+    position: static;
+    z-index: auto;
+    width: calc(var(--base-size) * 5);
+    height: calc(var(--base-size) * 5);
+    flex-shrink: 0;
+    border-radius: calc(var(--base-size) * 0.45);
+    object-fit: cover;
+  }
+
+  .header__tools {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: none;
+    margin-top: auto;
+    margin-left: 0;
+    box-sizing: border-box;
+    justify-content: center;
+    flex-wrap: wrap;
+    row-gap: calc(var(--base-size) * 1.2);
+    padding: calc(var(--base-size) * 1.4) calc(var(--base-size) * 1.6);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.35);
+  }
 }

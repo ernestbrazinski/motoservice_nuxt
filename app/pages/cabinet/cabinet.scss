@@ -44,6 +44,7 @@
 .admin-blocks {
   display: flex;
   gap: calc(var(--base-size) * 1.6);
+  padding-top: calc(var(--base-size) * 3.6);
 }
 
 .admin-blocks__content {
@@ -265,12 +266,12 @@ vl-button.admin-main-list__icon-btn::part(button) {
 .admin-tabs__tab {
   font: inherit;
   font-size: calc(var(--base-size) * 1.3);
-  padding: calc(var(--base-size) * 0.5) calc(var(--base-size) * 0.9);
+  padding: var(--base-size) calc(var(--base-size) * 1.6);
   background: var(--color-background);
   color: var(--color-text);
   cursor: pointer;
   border: none;
-  border-radius: var(--base-size);
+  text-align: left;
 }
 
 .admin-tabs__tab[aria-selected="true"] {

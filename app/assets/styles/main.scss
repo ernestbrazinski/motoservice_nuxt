@@ -68,6 +68,10 @@ a {
   margin-bottom: calc(var(--base-size) * 1.6);
 }
 
+vl-button.icon-button::part(button) {
+  padding: calc(var(--base-size) * 0.8);
+}
+
 .container {
   max-width: 100%;
   width: calc(var(--base-size) * 144);
@@ -89,16 +93,6 @@ a {
 
 .main--header-submenu-open {
   filter: blur(5px);
-}
-
-.footer {
-  flex-shrink: 0;
-  padding: calc(var(--base-size) * 0.75) calc(var(--base-size) * 1);
-  font-size: calc(var(--base-size) * 0.875);
-}
-
-.footer p {
-  margin: 0;
 }
 
 /* pages */

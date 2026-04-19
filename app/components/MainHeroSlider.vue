@@ -130,7 +130,16 @@ function goToSlide(index: number) {
               :key="realIndex"
               class="main-hero-pagination-progress"
               :style="{ '--er-banner-autoplay': `${BANNER_AUTOPLAY_MS}ms` }"
-            />
+            >
+              <span
+                class="main-hero-pagination-progress__fill"
+                aria-hidden="true"
+              />
+              <span
+                class="main-hero-pagination-progress__knob"
+                aria-hidden="true"
+              />
+            </span>
           </button>
         </div>
       </div>

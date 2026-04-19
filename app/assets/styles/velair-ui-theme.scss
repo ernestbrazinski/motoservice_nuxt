@@ -8,3 +8,16 @@
   // Sizes
   --vl-button-padding: calc(var(--base-size) * 0.8) calc(var(--base-size) * 1.6);
 }
+
+// temporary
+.header__field {
+  vl-select {
+    &::part(trigger) {
+      background: transparent;
+      color: #fff;
+    }
+    &::part(panel) {
+      background: transparent;
+    }
+  }
+}

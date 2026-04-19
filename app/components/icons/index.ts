@@ -1,4 +1,5 @@
 export { default as IconChevronDown } from "./chevron-down.vue";
+export { default as IconMenu } from "./menu.vue";
 export { default as IconEdit } from "./edit.vue";
 export { default as IconLogout } from "./logout.vue";
 export { default as IconTrash } from "./trash.vue";

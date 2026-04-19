@@ -7,6 +7,8 @@
     "home": "Home",
     "cabinet": "Admin",
     "mainMenu": "Main menu",
+    "openMobileMenu": "Open menu",
+    "closeMobileMenu": "Close menu",
     "motorcycles": "Motorcycles",
     "service": "Service",
     "store": "Shop",
